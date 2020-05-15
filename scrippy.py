@@ -1,3 +1,3 @@
-import ciao
+import pandas as pd
 
-ciao sndrea
+print(5+10)
