@@ -22,7 +22,7 @@ Se si usa R:
 
 
 ```r
-dataset = read.csv('dataset', sep = ";", dec = ",")
+dataset <- read.csv('dataset', sep = ";", dec = ",")
 ```
 
 
