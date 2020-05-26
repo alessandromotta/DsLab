@@ -83,4 +83,4 @@ dati_PUN_completi.drop(columns = 'index', inplace = True)
 
 ########### Creazione del csv
 
-dati_PUN_completi.to_csv('dati_PUN_completi.csv', sep = ";") #Ho usato come sepratore il ;
+dati_PUN_completi.to_csv('dati_PUN_completi.csv', sep = ";", index = False) #Ho usato come sepratore il ;
