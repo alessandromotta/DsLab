@@ -147,4 +147,4 @@ ggsubseriesplot(myts) +
 myts2 <- window(myts, start=2017, frequency = 24)
 gglagplot(myts2)
 
-ggAcf(myts2,lag = 26280)
+ggAcf(myts2,lag = 72)
