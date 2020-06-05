@@ -92,14 +92,14 @@ testX.shape
 model = tf.keras.Sequential()
 
 model.add(keras.layers.Dense(64, activation='relu', input_shape=(trainX.shape[1],)))
-model.add(keras.layers.Dense(64, activation='relu'))
+model.add(keras.layers.Dense(1024, activation='relu'))
 model.add(keras.layers.Dense(1))
-model.compile(optimizer='rmsprop', loss='mse', metrics=['mae'])
+model.compile(optimizer='adam', loss='mse', metrics=['mae'])
 
 # %%
 early_stopping = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=4,
                                                   verbose=0, mode='auto')
-model.fit(trainX, trainY, epochs=18, batch_size=100, callbacks=[early_stopping])
+model.fit(trainX, trainY, epochs=400, batch_size=1024, callbacks=[early_stopping])
 
 # %%
 predicted = model.predict(testX)
@@ -151,9 +151,9 @@ def create_model():
 
     model.add(keras.layers.Dense(64, activation='relu',
                            input_shape=(trainX.shape[1],)))
-    model.add(keras.layers.Dense(64, activation='relu'))
+    model.add(keras.layers.Dense(1024, activation='relu'))
     model.add(keras.layers.Dense(1))
-    model.compile(optimizer='rmsprop', loss='mse', metrics=['mae'])
+    model.compile(optimizer='adam', loss='mse', metrics=['mae'])
     return model
 
 
@@ -161,18 +161,18 @@ def create_model():
 model = KerasRegressor(build_fn=create_model, verbose=0)
 
 # %%
-batch_size = [10, 20, 40, 60, 80, 100, 120, 140]
-epochs = [2, 4, 6, 10, 12, 14, 16, 18, 20, 22, 24, 30, 40, 50]
-param_grid = dict(batch_size=batch_size, epochs=epochs)
+ batch_size = [1000, 10000, 5000, 2000]
+ epochs = [ 14, 16, 24, 30, 40, 50]
+ param_grid = dict(batch_size=batch_size, epochs=epochs)
 
 # %%
 grid = GridSearchCV(estimator=model, param_grid=param_grid, n_jobs=-1)
 
 # %%
-grid_result = grid.fit(trainX, trainY)
+g#rid_result = grid.fit(trainX, trainY)
 
 # %%
-# print(grid_result.best_score_)
-# print(grid_result.best_params_)
+print(grid_result.best_score_)
+print(grid_result.best_params_)
 
 # %%
