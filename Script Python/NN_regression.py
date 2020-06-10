@@ -13,33 +13,18 @@ from tensorflow import keras
 df = pd.read_csv("manipulated_pun.csv", sep=";", decimal=',', header='infer')
 
 df.head()
-# %%
-
-# Create x, where x the 'scores' column's values as floats
-x = df[['PUN']].values.astype(float)
 
 # Create a minimum and maximum processor object
-min_max_scaler = MinMaxScaler()
-
-# Create an object to transform the data to fit minmax processor
-x_scaled = min_max_scaler.fit_transform(x)
-
-df_normalized = pd.DataFrame(x_scaled)
-
-df['PUN_n'] = df_normalized.values
 
 # %%
 
-df
 
 
 # %%
 df["Data"] = df["Data"].apply(lambda x: str(x))
 df["Data"] = df["Data"].apply(lambda x: datetime.datetime.strptime(x,"%Y%m%d"))
-df = df.loc[df['Data'] < '2020-01-01']
+df = df.loc[df['Data'] <= '2020-01-01']
 
-
-# %%
 
 
 # %%
@@ -51,18 +36,17 @@ df.index = pd.DatetimeIndex(df.Datetime)
 df.head()
 
 # %%
-target = df["PUN_n"]
-df["df24"] = target.shift(168)
-target = df["PUN_n"].iloc[169:]
-features = df[["PUN_n", "df24"]].iloc[169:]
+target = df["PUN"]
+df["df24"] = target.shift(24)
+target = df["PUN"].iloc[25:]
+features = df[["PUN", "df24"]].iloc[25:]
 
 
 # %%
-features
-
+df.head()
 # %%
-mask_test = df["Datetime"] > "2019-01-01"
-mask_train = df["Datetime"] <= "2019-01-01"
+mask_test = df.index > "2019-12-25"
+mask_train = df.index <= "2019-12-25"
 
 # %%
 test = df.loc[mask_test]
@@ -73,20 +57,27 @@ train = df.loc[mask_train]
 train
 
 # %%
-trainX = train[["df24"]][168:]
-testX = test[["df24"]]
-trainY = train[["PUN_n"]][168:]
-testY = test[["PUN_n"]]
+train.dropna(inplace=True)
+
+
+# %%
+trainX = train['df24'][24:].values
+testX = test['df24'].values
+trainY = train['PUN'][24:].values
+testY = test["PUN"].values
 
 trainY
 
 
 # %%
-trainX.shape
+testY.shape
 
 
 # %%
-testX.shape
+trainX.shape = (26089, 1)
+testX.shape = (191, 1) 
+trainY.shape = (26089, 1)
+testY.shape = (191, 1)
 
 # %%
 model = tf.keras.Sequential()
@@ -99,16 +90,19 @@ model.compile(optimizer='adam', loss='mse', metrics=['mae'])
 # %%
 early_stopping = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=4,
                                                   verbose=0, mode='auto')
-model.fit(trainX, trainY, epochs=400, batch_size=1024, callbacks=[early_stopping])
+model.fit(trainX, trainY, epochs=50, batch_size=1000, callbacks=[early_stopping])
 
 # %%
 predicted = model.predict(testX)
+
 
 # %%
 predicted_ = pd.DataFrame(predicted)
 predicted_.head()
 
+
 # %%
+testY = pd.DataFrame(testY)
 testY = testY.reset_index()
 
 # %%
@@ -119,10 +113,12 @@ testY.head()
 
 len(predicted)
 
+
 # %%
 
 results_vect = pd.concat([testY, predicted_], axis=1)
 results_vect.columns = ['Datetime', 'Target', 'Reg']
+results_vect 
 
 # %%
 predicted_final = predicted_.shift(-24)
@@ -136,16 +132,26 @@ results_vect = pd.concat([testY, predicted_final], axis=1)
 results_vect.columns = ['Datetime', 'Target', 'predicted_final']
 
 # %%
+results_vect.dropna(inplace=True)
 results_vect[['Target', 'predicted_final']].plot()
 
-# %%
-
 
 # %%
-# Hyperparameter optimization
 
+results_vect['diff'] = abs(results_vect['Target'] - results_vect['predicted_final'])
+
+print(results_vect['diff'].mean())
 
 # %%
+
+results_vect['diff'] = (abs(results_vect['Target'] - results_vect['predicted_final'])/results_vect['Target'])
+
+print(results_vect['diff'].mean())
+# %%
+Hyperparameter optimization
+
+
+%%
 def create_model():
     model = tf.keras.Sequential()
 
@@ -169,7 +175,7 @@ model = KerasRegressor(build_fn=create_model, verbose=0)
 grid = GridSearchCV(estimator=model, param_grid=param_grid, n_jobs=-1)
 
 # %%
-g#rid_result = grid.fit(trainX, trainY)
+grid_result = grid.fit(trainX, trainY)
 
 # %%
 print(grid_result.best_score_)
